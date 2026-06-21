@@ -377,18 +377,9 @@
             badgeClasses.forEach(cls => statusBadge.classList.remove(cls));
             statusBadge.classList.add(status);
             
-            const spinner = statusBadge.querySelector('.spinner');
             if (status === 'completed' || status === 'failed') {
-                if (spinner) spinner.remove();
-                statusBadge.textContent = statusMap[status] || status;
+                statusBadge.innerHTML = statusMap[status] || status;
             } else {
-                if (!spinner) {
-                    const newSpinner = document.createElement('span');
-                    newSpinner.className = 'spinner';
-                    statusBadge.insertBefore(newSpinner, statusBadge.firstChild);
-                }
-                statusBadge.textContent = '';
-                statusBadge.appendChild(statusBadge.querySelector('.spinner') || document.createElement('span'));
                 statusBadge.innerHTML = `<span class="spinner"></span>${statusMap[status] || status}`;
             }
         }
