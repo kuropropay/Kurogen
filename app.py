@@ -42,7 +42,7 @@ def create_task():
             f'{KIE_API_BASE_URL}/tasks/create',
             headers=headers,
             json=payload,
-            timeout=10
+            timeout=60
         )
         
         if response.status_code not in [200, 201]:
