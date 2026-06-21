@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIE.AI Seedance 2.0 - Video Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .btn-generate:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-generate:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-clear {
+            background: #f0f0f0;
+            color: #333;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .btn-clear:hover:not(:disabled) {
+            background: #e0e0e0;
+        }
+
+        .status-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .status-section.active {
+            display: block;
+        }
+
+        .status-label {
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .status-value {
+            color: #333;
+            font-size: 1.1em;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            background: #fff;
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #667eea;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.7); }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-badge.processing {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .status-badge.completed {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-badge.failed {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .video-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        video {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            margin-top: 15px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #842029;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #f5c2c7;
+        }
+
+        .success-message {
+            background: #d1e7dd;
+            color: #0f5132;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #badbcc;
+        }
+
+        .loading-text {
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 KIE.AI Seedance 2.0</h1>
+        <p class="subtitle">Generate Amazing Videos with AI</p>
+
+        <form id="promptForm">
+            <div class="form-group">
+                <label for="prompt">Enter Your Prompt:</label>
+                <textarea id="prompt" placeholder="Describe the video you want to generate..."></textarea>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-generate" id="generateBtn">Generate Video</button>
+                <button type="button" class="btn-clear" onclick="clearForm()">Clear</button>
+            </div>
+        </form>
+
+        <div class="status-section" id="statusSection">
+            <div class="status-label">Task ID:</div>
+            <div class="status-value" id="taskId"></div>
+
+            <div class="status-label" style="margin-top: 15px;">Status:</div>
+            <div>
+                <span class="status-badge pending" id="statusBadge">
+                    <span class="spinner"></span>Pending
+                </span>
+                <p class="loading-text" id="loadingText">Generating your video...</p>
+            </div>
+
+            <div id="errorMessage"></div>
+            <div id="successMessage"></div>
+
+            <div class="video-container" id="videoContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const promptForm = document.getElementById('promptForm');
+        const promptInput = document.getElementById('prompt');
+        const generateBtn = document.getElementById('generateBtn');
+        const statusSection = document.getElementById('statusSection');
+        const taskIdDiv = document.getElementById('taskId');
+        const statusBadge = document.getElementById('statusBadge');
+        const loadingText = document.getElementById('loadingText');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const videoContainer = document.getElementById('videoContainer');
+
+        let pollingInterval;
+
+        promptForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                showError('Please enter a prompt');
+                return;
+            }
+
+            generateBtn.disabled = true;
+            clearMessages();
+            statusSection.classList.add('active');
+            videoContainer.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/create-task', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to create task');
+                }
+
+                const taskId = data.task_id;
+                taskIdDiv.textContent = taskId;
+                showSuccess('Task created successfully! Starting video generation...');
+
+                // Start polling
+                startPolling(taskId);
+
+            } catch (error) {
+                showError(`Error: ${error.message}`);
+                generateBtn.disabled = false;
+                statusSection.classList.remove('active');
+            }
+        });
+
+        function startPolling(taskId) {
+            pollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/get-task/${taskId}`);
+                    const taskData = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(taskData.error || 'Failed to fetch task');
+                    }
+
+                    const status = taskData.status;
+                    updateStatusBadge(status);
+
+                    if (status === 'completed') {
+                        clearInterval(pollingInterval);
+                        const videoUrl = taskData.video_url;
+                        
+                        if (videoUrl) {
+                            videoContainer.innerHTML = `
+                                <p style="color: #333; font-weight: 600;">Your Video is Ready!</p>
+                                <video controls autoplay>
+                                    <source src="${videoUrl}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            `;
+                            showSuccess('Video generated successfully! 🎉');
+                            loadingText.style.display = 'none';
+                        } else {
+                            showError('Video URL not found in response');
+                        }
+                        generateBtn.disabled = false;
+                    } else if (status === 'failed') {
+                        clearInterval(pollingInterval);
+                        showError('Video generation failed. Please try again.');
+                        generateBtn.disabled = false;
+                    }
+
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 5000); // Poll every 5 seconds
+        }
+
+        function updateStatusBadge(status) {
+            const statusMap = {
+                'pending': 'Pending',
+                'processing': 'Processing',
+                'completed': 'Completed',
+                'failed': 'Failed'
+            };
+
+            const badgeClasses = ['pending', 'processing', 'completed', 'failed'];
+            badgeClasses.forEach(cls => statusBadge.classList.remove(cls));
+            statusBadge.classList.add(status);
+            
+            const spinner = statusBadge.querySelector('.spinner');
+            if (status === 'completed' || status === 'failed') {
+                if (spinner) spinner.remove();
+                statusBadge.textContent = statusMap[status] || status;
+            } else {
+                if (!spinner) {
+                    const newSpinner = document.createElement('span');
+                    newSpinner.className = 'spinner';
+                    statusBadge.insertBefore(newSpinner, statusBadge.firstChild);
+                }
+                statusBadge.textContent = '';
+                statusBadge.appendChild(statusBadge.querySelector('.spinner') || document.createElement('span'));
+                statusBadge.innerHTML = `<span class="spinner"></span>${statusMap[status] || status}`;
+            }
+        }
+
+        function showError(message) {
+            errorMessage.innerHTML = `<div class="error-message">${message}</div>`;
+        }
+
+        function showSuccess(message) {
+            successMessage.innerHTML = `<div class="success-message">${message}</div>`;
+        }
+
+        function clearMessages() {
+            errorMessage.innerHTML = '';
+            successMessage.innerHTML = '';
+            loadingText.style.display = 'block';
+        }
+
+        function clearForm() {
+            promptInput.value = '';
+            statusSection.classList.remove('active');
+            clearMessages();
+            videoContainer.innerHTML = '';
+            generateBtn.disabled = false;
+            if (pollingInterval) clearInterval(pollingInterval);
+        }
+    </script>
+</body>
+</html>
